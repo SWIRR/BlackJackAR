@@ -83,6 +83,12 @@ crashlytics-build.properties
 # TestRunner generated files
 InitTestScene*.unity*
 
+il2cppOutput/
+*_BurstDebugInformation_DoNotShip/
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*.symbols.zip
+.vsconfig
+
 # Addressables default ignores, before user customizations
 /ServerData
 /[Aa]ssets/StreamingAssets/aa*
