@@ -236,6 +236,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerHandRoot: {fileID: 1097775756925940733}
   dealerHandRoot: {fileID: 5771681277675192736}
+  dealerTransform: {fileID: 7887900777591187294}
+  dealerStandDistance: 1.5
+  dealerHeightOffset: -1.5
   tableRadius: 0.45
   handInset: 0.08
   cardSpacing: 0.06

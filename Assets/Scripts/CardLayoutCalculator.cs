@@ -14,6 +14,14 @@ public class CardLayoutCalculator : MonoBehaviour
     public Transform playerHandRoot;
     public Transform dealerHandRoot;
 
+    [Header("Dealer (dziecko CardTable)")]
+    [Tooltip("Transform postaci krupiera — musi być dzieckiem CardTable.")]
+    public Transform dealerTransform;
+    [Tooltip("Odległość krupiera od środka stołu (lokalna przestrzeń stołu).")]
+    public float dealerStandDistance = 1.5f;
+    [Tooltip("Lokalna wysokość krupiera nad stołem (Y w przestrzeni stołu).")]
+    public float dealerHeightOffset = -1.5f;
+
     [Header("Geometria stołu")]
     [Tooltip("Promień stołu od środka do narożnika.")]
     public float tableRadius = 0.45f;
@@ -52,8 +60,26 @@ public class CardLayoutCalculator : MonoBehaviour
 
         SetRootLocalPosition(playerHandRoot, playerLocalDir, edgeDist);
         SetRootLocalPosition(dealerHandRoot, dealerLocalDir, edgeDist);
+        SetDealerLocalTransform(dealerLocalDir);
 
         Debug.Log($"[CardLayout] Gracz od strony {snapped:F0}°");
+    }
+
+    private void SetDealerLocalTransform(Vector3 dealerLocalDir)
+    {
+        if (dealerTransform == null) return;
+
+        dealerTransform.localPosition = new Vector3(
+            dealerLocalDir.x * dealerStandDistance,
+            dealerHeightOffset,
+            dealerLocalDir.z * dealerStandDistance
+        );
+
+        // Rotacja: krupier patrzy w kierunku gracza (-dealerLocalDir = w stronę środka stołu)
+        // Upewnij się, że -dealerLocalDir nie jest zerowym wektorem przed LookRotation
+        Vector3 facingDir = -dealerLocalDir;
+        if (facingDir.sqrMagnitude > 0.0001f)
+            dealerTransform.localRotation = Quaternion.LookRotation(facingDir, Vector3.up);
     }
 
     private void SetRootLocalPosition(Transform root, Vector3 localDir, float edgeDist)
