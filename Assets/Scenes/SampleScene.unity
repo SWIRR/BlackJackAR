@@ -1835,7 +1835,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &436358033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2719,24 +2719,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 450, y: 600}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &608830361
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2512387470231460730}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4dea56a9eaadd1c439095de4f9a371cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <trackablesChanged>k__BackingField:
-    m_PersistentCalls:
-      m_Calls: []
-  m_SerializedLibrary: {fileID: 11400000, guid: 344967372cf3e0143af59a8b09c67759, type: 2}
-  m_MaxNumberOfMovingImages: 3
-  m_TrackedImagePrefab: {fileID: 0}
 --- !u!114 &608830362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2749,10 +2731,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b597c3f2be0ba54683dd2ce400670a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trackedImageManager: {fileID: 608830361}
   planeManager: {fileID: 2512387470231460732}
+  raycastManager: {fileID: 2512387470231460733}
   blackjackTablePrefab: {fileID: 8533214544678054468, guid: 25c8883af1b63a14486b6d5e08b31f80, type: 3}
-  targetImageName: CardTable
+  wrongPlanePrefab: {fileID: 1585201990951412, guid: a6b7ca1d53c75490595d1f0d5f43be38, type: 3}
+  correctPlanePrefab: {fileID: 1585201990951412, guid: a9390a073622fd244b250cc4192bda68, type: 3}
+  cameraMargin: 0.3
+  minPlaneY: 0.1
 --- !u!1 &637151521 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5963138107579739024, guid: 02644bbd28622410a84cf154fc436b8a, type: 3}
@@ -12623,10 +12608,10 @@ GameObject:
   - component: {fileID: 2512387470231460711}
   - component: {fileID: 2512387470231460710}
   - component: {fileID: 2512387470231460709}
-  - component: {fileID: 608830361}
   - component: {fileID: 608830362}
   - component: {fileID: 2512387470231460731}
   - component: {fileID: 2512387470231460732}
+  - component: {fileID: 2512387470231460733}
   m_Layer: 0
   m_Name: XR Origin (AR Rig)
   m_TagString: Untagged
@@ -12667,6 +12652,22 @@ MonoBehaviour:
       m_Calls: []
   m_PlanePrefab: {fileID: 1585201990951412, guid: a6b7ca1d53c75490595d1f0d5f43be38, type: 3}
   m_DetectionMode: 1
+--- !u!114 &2512387470231460733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2512387470231460730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa17d122634046b4a8e23048891fafc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <trackablesChanged>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
+  m_RaycastPrefab: {fileID: 0}
 --- !u!1 &2512387470665874425
 GameObject:
   m_ObjectHideFlags: 0

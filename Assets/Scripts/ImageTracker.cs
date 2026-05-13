@@ -1,106 +1,174 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
 public class BlackjackTableTracker : MonoBehaviour
 {
     [Header("AR Components")]
-    public ARTrackedImageManager trackedImageManager;
     public ARPlaneManager planeManager;
+    public ARRaycastManager raycastManager;
 
-    [Header("Blackjack Table")]
+    [Header("Table Prefab")]
     public GameObject blackjackTablePrefab;
-    public string targetImageName = "blackjack_marker";
+
+    [Header("Plane Visuals")]
+    public GameObject wrongPlanePrefab;
+    public GameObject correctPlanePrefab;
+
+    [Header("Plane Detection")]
+    [Tooltip("How far below the camera a plane must be to not be considered ceiling")]
+    public float cameraMargin = 0.3f;
 
     public static event Action<GameObject> OnTableSpawned;
 
+    private ARPlane currentBestPlane;
     private GameObject spawnedTable;
-    private ARPlane anchorPlane;
+    private static readonly List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
     void OnEnable()
     {
-        trackedImageManager.trackablesChanged.AddListener(OnImagesChanged);
         planeManager.trackablesChanged.AddListener(OnPlanesChanged);
+        EnhancedTouchSupport.Enable();
     }
 
     void OnDisable()
     {
-        trackedImageManager.trackablesChanged.RemoveListener(OnImagesChanged);
         planeManager.trackablesChanged.RemoveListener(OnPlanesChanged);
+        EnhancedTouchSupport.Disable();
     }
 
-    void OnImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
+    void Update()
     {
-        foreach (var img in eventArgs.added) HandleTrackedImage(img);
-        foreach (var img in eventArgs.updated) HandleTrackedImage(img);
-    }
-
-    void HandleTrackedImage(ARTrackedImage trackedImage)
-    {
-        if (trackedImage.referenceImage == null) return;
-
-        string imageName = trackedImage.referenceImage.name;
-        if (string.IsNullOrEmpty(imageName) || string.IsNullOrEmpty(targetImageName)) return;
-        if (!imageName.Trim().Equals(targetImageName.Trim(), StringComparison.OrdinalIgnoreCase)) return;
-
-        // Stół już stoi — NIGDY go nie ruszamy
         if (spawnedTable != null) return;
+        if (currentBestPlane == null) return;
 
-        // Czekamy na pewny tracking
-        if (trackedImage.trackingState != TrackingState.Tracking) return;
+        Vector2 screenPos = Vector2.zero;
+        bool didTap = false;
 
-        ARPlane planeUnder = FindPlaneUnder(trackedImage.transform.position);
-        if (planeUnder != null) anchorPlane = planeUnder;
+#if UNITY_EDITOR
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            didTap = true;
+        }
+#else
+        if (UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Count > 0 && UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches[0].phase == UnityEngine.InputSystem.TouchPhase.Began)
+        {
+            screenPos = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches[0].screenPosition;
+            didTap = true;
+        }
+#endif
 
-        if (blackjackTablePrefab == null) return;
 
-        Vector3 spawnPos = trackedImage.transform.position;
-        Quaternion spawnRot = BuildTableRotation(trackedImage.transform, anchorPlane);
+        if (!didTap) return;
 
-        // KLUCZOWE: brak SetParent — stół jest wolnym obiektem, nic go nie rusza
-        spawnedTable = Instantiate(blackjackTablePrefab, spawnPos, spawnRot);
-        spawnedTable.transform.localScale = Vector3.one * 0.4f;
+        if (!raycastManager.Raycast(screenPos, hits, TrackableType.PlaneWithinBounds)) return;
 
-        Debug.Log($"[Blackjack] Stół zespawnowany @ {spawnPos}");
-        OnTableSpawned?.Invoke(spawnedTable);
+        foreach (ARRaycastHit hit in hits)
+        {
+            if (hit.trackableId != currentBestPlane.trackableId) continue;
+
+            Vector3 spawnPos = currentBestPlane.transform.position;
+            Quaternion spawnRot = currentBestPlane.transform.rotation;
+
+            spawnedTable = Instantiate(blackjackTablePrefab, spawnPos, spawnRot);
+
+            foreach (ARPlane plane in planeManager.trackables)
+                plane.gameObject.SetActive(false);
+
+            planeManager.enabled = false;
+
+            OnTableSpawned?.Invoke(spawnedTable);
+            Debug.Log($"[Blackjack] Table spawned at: {spawnPos}");
+            break;
+        }
     }
 
     void OnPlanesChanged(ARTrackablesChangedEventArgs<ARPlane> eventArgs)
     {
-        // Plane jest używany TYLKO do rotacji przy spawnie. Reszta nas nie obchodzi.
+        if (spawnedTable != null) return; // ignore plane updates after table is placed
+        RefreshPlaneVisuals();
     }
 
-    private Quaternion BuildTableRotation(Transform imageTransform, ARPlane plane)
+    private void RefreshPlaneVisuals()
     {
-        Vector3 surfaceUp = (plane != null) ? plane.transform.up : Vector3.up;
-        Vector3 tableForward = Vector3.ProjectOnPlane(imageTransform.forward, surfaceUp).normalized;
+        ARPlane best = FindBestPlane();
 
-        if (tableForward.sqrMagnitude < 0.001f)
-            tableForward = Vector3.ProjectOnPlane(imageTransform.right, surfaceUp).normalized;
-
-        return Quaternion.LookRotation(tableForward, surfaceUp);
-    }
-
-    private ARPlane FindPlaneUnder(Vector3 worldPos)
-    {
-        ARPlane closest = null;
-        float bestDist = float.MaxValue;
-
-        foreach (var plane in planeManager.trackables)
+        foreach (ARPlane plane in planeManager.trackables)
         {
-            if (plane.alignment != PlaneAlignment.HorizontalUp &&
-                plane.alignment != PlaneAlignment.HorizontalDown)
-                continue;
+            if (plane.alignment != PlaneAlignment.HorizontalUp) continue;
+            ApplyVisual(plane, plane == best);
+        }
 
-            float dist = Vector3.Distance(plane.transform.position, worldPos);
-            if (dist < bestDist)
+        if (best != null && best != currentBestPlane)
+        {
+            currentBestPlane = best;
+            Debug.Log($"[Blackjack] Best plane updated @ Y: {best.transform.position.y}");
+        }
+    }
+
+    private void ApplyVisual(ARPlane plane, bool isCorrect)
+    {
+        MeshRenderer meshRenderer = plane.GetComponent<MeshRenderer>();
+        GameObject prefabToUse = isCorrect ? correctPlanePrefab : wrongPlanePrefab;
+
+        if (prefabToUse != null && meshRenderer != null)
+        {
+            MeshRenderer prefabRenderer = prefabToUse.GetComponent<MeshRenderer>();
+            if (prefabRenderer != null)
+                meshRenderer.material = prefabRenderer.sharedMaterial;
+        }
+    }
+
+    private ARPlane FindBestPlane()
+    {
+        float cameraY = Camera.main.transform.position.y;
+        float maxAllowedY = cameraY - cameraMargin;
+        float minAllowedY = cameraY - 2.0f;
+
+        ARPlane lowest = null;
+        float lowestY = float.MaxValue;
+
+        List<ARPlane> candidates = new List<ARPlane>();
+        foreach (ARPlane plane in planeManager.trackables)
+        {
+            if (plane.alignment != PlaneAlignment.HorizontalUp) continue;
+
+            float planeY = plane.transform.position.y;
+            if (planeY > maxAllowedY) continue;
+            if (planeY < minAllowedY) continue;
+
+            candidates.Add(plane);
+            if (planeY < lowestY) { lowestY = planeY; lowest = plane; }
+        }
+
+        if (candidates.Count == 0) return null;
+
+        // only one plane — don't guess, return nothing
+        // user needs to scan more so we can distinguish floor from table
+        if (candidates.Count == 1) return null;
+
+        ARPlane best = null;
+        float highestY = float.MinValue;
+
+        foreach (ARPlane plane in candidates)
+        {
+            float planeY = plane.transform.position.y;
+
+            // must be at least 25cm above the lowest plane to not be floor
+            if (planeY - lowestY < 0.25f) continue;
+
+            if (planeY > highestY)
             {
-                bestDist = dist;
-                closest = plane;
+                highestY = planeY;
+                best = plane;
             }
         }
 
-        return closest;
+        return best; // null if no plane clears the height gap — all shown as wrong
     }
 }

@@ -47,6 +47,8 @@ public class BlackJackUIManager : MonoBehaviour
     // Zmieniono sygnaturę tak, by pasowała do Action<GameObject>
     void InitializeGame(GameObject spawnedTable)
     {
+        BlackjackTableTracker.OnTableSpawned -= InitializeGame;
+
         tableObject = spawnedTable;
         tableVisuals = spawnedTable.GetComponent<BlackjackTableVisuals>();
 
