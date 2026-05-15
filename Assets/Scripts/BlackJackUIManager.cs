@@ -39,6 +39,7 @@ public class BlackJackUIManager : MonoBehaviour
     private GameObject tableObject;
     private BlackjackTableVisuals tableVisuals;
     private DealerAnimationController dealerAnimationController;
+    private BetChipSpawner betChipSpawner;
 
     void Start()
     {
@@ -53,6 +54,7 @@ public class BlackJackUIManager : MonoBehaviour
         tableObject = spawnedTable;
         tableVisuals = spawnedTable.GetComponent<BlackjackTableVisuals>();
         dealerAnimationController = spawnedTable.GetComponentInChildren<DealerAnimationController>();
+        betChipSpawner = spawnedTable.GetComponentInChildren<BetChipSpawner>();
 
         panelBet.SetActive(true);
         panelGame.SetActive(false);
@@ -68,11 +70,15 @@ public class BlackJackUIManager : MonoBehaviour
             dealerAnimationController?.PlayWave();
         });
         btnRestart.onClick.AddListener(gameManager.RequestBetPanel);
-        btnBet10.onClick.AddListener(() => gameManager.PlaceBet(10));
-        btnBet25.onClick.AddListener(() => gameManager.PlaceBet(25));
-        btnBet50.onClick.AddListener(() => gameManager.PlaceBet(50));
-        btnBet100.onClick.AddListener(() => gameManager.PlaceBet(100));
-        btnClearBet.onClick.AddListener(gameManager.ClearBet);
+        btnBet10.onClick.AddListener(() => PlaceBetWithChip(10));
+        btnBet25.onClick.AddListener(() => PlaceBetWithChip(25));
+        btnBet50.onClick.AddListener(() => PlaceBetWithChip(50));
+        btnBet100.onClick.AddListener(() => PlaceBetWithChip(100));
+        btnClearBet.onClick.AddListener(() =>
+        {
+            gameManager.ClearBet();
+            betChipSpawner?.ClearChips();
+        });
 
         // Subskrypcja eventów z GameManagera
         gameManager.OnBalanceChanged += UpdateBalanceUI;
@@ -86,6 +92,20 @@ public class BlackJackUIManager : MonoBehaviour
 
         // Stan początkowy UI
         UpdateBalanceUI(gameManager.Balance);
+    }
+
+    private void PlaceBetWithChip(int value)
+    {
+        int betBefore = gameManager.CurrentBet;
+
+        gameManager.PlaceBet(value);
+
+        int betAfter = gameManager.CurrentBet;
+
+        if (betAfter > betBefore)
+        {
+            betChipSpawner?.SpawnChip(value);
+        }
     }
 
     void OnDestroy()
@@ -112,6 +132,7 @@ public class BlackJackUIManager : MonoBehaviour
         panelGame.SetActive(false);
         panelResult.SetActive(false);
         UpdateBetUI(gameManager.CurrentBet);
+        betChipSpawner?.ClearChips();
     }
 
     void ShowResult(string resultText, int payout)
