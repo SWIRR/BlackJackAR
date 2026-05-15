@@ -2737,7 +2737,6 @@ MonoBehaviour:
   wrongPlanePrefab: {fileID: 1585201990951412, guid: a6b7ca1d53c75490595d1f0d5f43be38, type: 3}
   correctPlanePrefab: {fileID: 1585201990951412, guid: a9390a073622fd244b250cc4192bda68, type: 3}
   cameraMargin: 0.3
-  minPlaneY: 0.1
 --- !u!1 &637151521 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5963138107579739024, guid: 02644bbd28622410a84cf154fc436b8a, type: 3}
