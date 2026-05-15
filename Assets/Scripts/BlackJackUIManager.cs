@@ -38,6 +38,7 @@ public class BlackJackUIManager : MonoBehaviour
 
     private GameObject tableObject;
     private BlackjackTableVisuals tableVisuals;
+    private DealerAnimationController dealerAnimationController;
 
     void Start()
     {
@@ -51,6 +52,7 @@ public class BlackJackUIManager : MonoBehaviour
 
         tableObject = spawnedTable;
         tableVisuals = spawnedTable.GetComponent<BlackjackTableVisuals>();
+        dealerAnimationController = spawnedTable.GetComponentInChildren<DealerAnimationController>();
 
         panelBet.SetActive(true);
         panelGame.SetActive(false);
@@ -60,7 +62,11 @@ public class BlackJackUIManager : MonoBehaviour
         btnHit.onClick.AddListener(gameManager.Hit);
         btnStand.onClick.AddListener(gameManager.Stand);
         btnDouble.onClick.AddListener(gameManager.DoubleDown);
-        btnDeal.onClick.AddListener(gameManager.Deal);
+        btnDeal.onClick.AddListener(() =>
+        {
+            gameManager.Deal();
+            dealerAnimationController?.PlayWave();
+        });
         btnRestart.onClick.AddListener(gameManager.RequestBetPanel);
         btnBet10.onClick.AddListener(() => gameManager.PlaceBet(10));
         btnBet25.onClick.AddListener(() => gameManager.PlaceBet(25));
@@ -112,9 +118,28 @@ public class BlackJackUIManager : MonoBehaviour
     {
         panelResult.SetActive(true);
         textResult.text = resultText + (payout > 0 ? $"\n+{payout}$" : "");
+
+        if (IsPlayerWin(resultText))
+        {
+            dealerAnimationController?.PlayThumbsUp();
+        }
+        else if (IsPlayerLoss(resultText))
+        {
+            dealerAnimationController?.PlayHeadGrab();
+        }
     }
 
     // ===================== AKTUALIZACJE UI =====================
+
+    bool IsPlayerWin(string resultText)
+    {
+        return resultText.Contains("WYGRANA") || resultText.Contains("BLACKJACK");
+    }
+
+    bool IsPlayerLoss(string resultText)
+    {
+        return resultText.Contains("PRZEGRANA");
+    }
 
     void UpdateBalanceUI(int balance)
     {
