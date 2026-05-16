@@ -9,6 +9,7 @@ public class BlackJackUIManager : MonoBehaviour
     public BlackJackGameManager gameManager;
 
     [Header("Panele")]
+    public GameObject panelInstructions;
     public GameObject panelGame;
     public GameObject panelResult;
     public GameObject panelBet;
@@ -34,6 +35,11 @@ public class BlackJackUIManager : MonoBehaviour
     public Button btnBet100;
     public Button btnClearBet;
 
+    [Header("Obrazki Wyników")]
+    public Image imageResult;
+    public Sprite spriteWin;
+    public Sprite spriteLoss;
+
     // ===================== INIT =====================
 
     private GameObject tableObject;
@@ -43,6 +49,11 @@ public class BlackJackUIManager : MonoBehaviour
 
     void Start()
     {
+        if (panelInstructions != null) panelInstructions.SetActive(true);
+        if (panelBet != null) panelBet.SetActive(false);
+        if (panelGame != null) panelGame.SetActive(false);
+        if (panelResult != null) panelResult.SetActive(false);
+
         BlackjackTableTracker.OnTableSpawned += InitializeGame;
     }
 
@@ -55,6 +66,8 @@ public class BlackJackUIManager : MonoBehaviour
         tableVisuals = spawnedTable.GetComponent<BlackjackTableVisuals>();
         dealerAnimationController = spawnedTable.GetComponentInChildren<DealerAnimationController>();
         betChipSpawner = spawnedTable.GetComponentInChildren<BetChipSpawner>();
+
+        if (panelInstructions != null) panelInstructions.SetActive(false);
 
         panelBet.SetActive(true);
         panelGame.SetActive(false);
@@ -138,15 +151,19 @@ public class BlackJackUIManager : MonoBehaviour
     void ShowResult(string resultText, int payout)
     {
         panelResult.SetActive(true);
-        textResult.text = resultText + (payout > 0 ? $"\n+{payout}$" : "");
+        textResult.text = payout > 0 ? $"\n+{payout}$" : "";
 
         if (IsPlayerWin(resultText))
         {
             dealerAnimationController?.PlayThumbsUp();
+            if (imageResult != null && spriteWin != null)
+                imageResult.sprite = spriteWin;
         }
         else if (IsPlayerLoss(resultText))
         {
             dealerAnimationController?.PlayHeadGrab();
+            if (imageResult != null && spriteLoss != null)
+                imageResult.sprite = spriteLoss;
         }
     }
 
@@ -183,7 +200,7 @@ public class BlackJackUIManager : MonoBehaviour
 
         if (hideSecondDealerCard && dealerHand.Count >= 2)
         {
-            textDealerCards.text = dealerHand[0] + " 🂠";
+            textDealerCards.text = dealerHand[0] + " ?";
             textDealerScore.text = $"Wynik: {gameManager.CardValue(dealerHand[0])}";
         }
         else

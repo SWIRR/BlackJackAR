@@ -1,2 +1,35 @@
 fileFormatVersion: 2
 guid: 8893143c0ec8c954ebb06224b2339ccc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - gameManager: {instanceID: 0}
+  - panelGame: {instanceID: 0}
+  - panelResult: {instanceID: 0}
+  - panelBet: {instanceID: 0}
+  - textPlayerCards: {instanceID: 0}
+  - textPlayerScore: {instanceID: 0}
+  - textDealerCards: {instanceID: 0}
+  - textDealerScore: {instanceID: 0}
+  - textResult: {instanceID: 0}
+  - textBalance: {instanceID: 0}
+  - textCurrentBet: {instanceID: 0}
+  - btnHit: {instanceID: 0}
+  - btnStand: {instanceID: 0}
+  - btnDouble: {instanceID: 0}
+  - btnDeal: {instanceID: 0}
+  - btnRestart: {instanceID: 0}
+  - btnBet10: {instanceID: 0}
+  - btnBet25: {instanceID: 0}
+  - btnBet50: {instanceID: 0}
+  - btnBet100: {instanceID: 0}
+  - btnClearBet: {instanceID: 0}
+  - imageResult: {instanceID: 0}
+  - spriteWin: {fileID: 21300000, guid: 11b701614010c034ca167180c9bcac85, type: 3}
+  - spriteLoss: {fileID: 21300000, guid: ff13ee856bc4afb41ac3bf6f5b71c925, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
